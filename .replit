@@ -1,0 +1,39 @@
+modules = ["go"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "build-and-run-go-app"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "GoMetadataRemovalUtility"
+
+[[workflows.workflow]]
+name = "build-and-run-go-app"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "go mod init metadata-remover && go build -o metadata-remover && ./metadata-remover --help"
+
+[[workflows.workflow]]
+name = "GoMetadataRemovalUtility"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace && go build -o metadata-remover && ./metadata-remover --help"
+
+[deployment]
+run = ["sh", "-c", "go run main.go --verbose --preview"]
