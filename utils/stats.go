@@ -11,13 +11,13 @@ import (
 // FormatStats generates a human-readable report of metadata statistics
 func FormatStats(stats *stats.MetadataStats, format string) string {
         if format == "json" {
-                return formatStatsAsJSON(stats)
+                return FormatStatsAsJSON(stats)
         }
-        return formatStatsAsText(stats)
+        return FormatStatsAsText(stats)
 }
 
-// formatStatsAsText generates a human-readable text report of metadata statistics
-func formatStatsAsText(stats *stats.MetadataStats) string {
+// FormatStatsAsText generates a human-readable text report of metadata statistics
+func FormatStatsAsText(stats *stats.MetadataStats) string {
         var sb strings.Builder
 
         // Title
@@ -162,8 +162,8 @@ func formatStatsAsText(stats *stats.MetadataStats) string {
         return sb.String()
 }
 
-// formatStatsAsJSON generates a JSON representation of metadata statistics
-func formatStatsAsJSON(stats *stats.MetadataStats) string {
+// FormatStatsAsJSON generates a JSON representation of metadata statistics
+func FormatStatsAsJSON(stats *stats.MetadataStats) string {
         jsonBytes, err := json.MarshalIndent(stats, "", "  ")
         if err != nil {
                 return fmt.Sprintf("Error generating JSON: %v", err)
@@ -181,6 +181,6 @@ func formatFileType(fileType string) string {
         case stats.TypeDocument:
                 return "Documents"
         default:
-                return fmt.Sprintf("%s files", strings.Title(fileType))
+                return fmt.Sprintf("%s files", strings.ToUpper(fileType[:1]) + fileType[1:])
         }
 }

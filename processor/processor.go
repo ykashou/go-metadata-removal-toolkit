@@ -46,11 +46,11 @@ func (p *Processor) ProcessFile(filePath, ext string) error {
         // Process file based on type
         var err error
         switch fileType {
-        case TypeImage:
+        case stats.TypeImage:
                 err = p.ProcessImage(filePath, ext)
-        case TypePDF:
+        case stats.TypePDF:
                 err = p.ProcessPDF(filePath)
-        case TypeDocument:
+        case stats.TypeDocument:
                 err = p.ProcessDocument(filePath, ext)
         }
 
@@ -77,22 +77,22 @@ func (p *Processor) getFileType(ext string) string {
         imageExtensions := []string{".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp"}
         for _, imgExt := range imageExtensions {
                 if ext == imgExt {
-                        return TypeImage
+                        return stats.TypeImage
                 }
         }
 
         // PDF file extension
         if ext == ".pdf" {
-                return TypePDF
+                return stats.TypePDF
         }
 
         // Document file extensions
         docExtensions := []string{".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp", ".rtf", ".txt"}
         for _, docExt := range docExtensions {
                 if ext == docExt {
-                        return TypeDocument
+                        return stats.TypeDocument
                 }
         }
 
-        return TypeUnknown
+        return stats.TypeUnknown
 }

@@ -113,6 +113,20 @@ func main() {
         utils.PrintSuccess(fmt.Sprintf("Time taken: %v", duration))
         utils.PrintSuccess(fmt.Sprintf("Log file: %s", logFilePath))
 
+        // Print detailed metadata statistics
+        if processedCount > 0 {
+                // Get statistics from the scanner
+                metadataStats := s.GetStats()
+                
+                // Format and display stats based on output format
+                switch outputFormat {
+                case "json":
+                        fmt.Println(utils.FormatStatsAsJSON(metadataStats))
+                default:
+                        fmt.Println(utils.FormatStatsAsText(metadataStats))
+                }
+        }
+
         if previewMode {
                 utils.PrintWarning("Preview mode: No files were modified")
         }

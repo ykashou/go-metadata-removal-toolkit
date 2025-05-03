@@ -9,6 +9,7 @@ import (
 
         "metadata-remover/logger"
         "metadata-remover/processor"
+        "metadata-remover/stats"
         "metadata-remover/utils"
 )
 
@@ -97,4 +98,9 @@ func (s *Scanner) ProcessFile(filePath string) error {
         }
 
         return nil
+}
+
+// GetStats returns the metadata statistics collected during processing
+func (s *Scanner) GetStats() *stats.MetadataStats {
+        return s.processor.Stats
 }
