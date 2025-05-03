@@ -13,22 +13,22 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "build-and-run-go-app"
+args = "GoMetadataRemovalUtility"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "GoMetadataRemovalUtility"
+args = "MetadataRemover"
 
 [[workflows.workflow]]
-name = "build-and-run-go-app"
+name = "GoMetadataRemovalUtility"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "go mod init metadata-remover && go build -o metadata-remover && ./metadata-remover --help"
+args = "cd /home/runner/workspace && go build -o metadata-remover && ./metadata-remover --help"
 
 [[workflows.workflow]]
-name = "GoMetadataRemovalUtility"
+name = "MetadataRemover"
 author = "agent"
 
 [[workflows.workflow.tasks]]

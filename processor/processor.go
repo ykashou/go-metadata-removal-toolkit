@@ -7,6 +7,7 @@ import (
         "strings"
 
         "metadata-remover/logger"
+        "metadata-remover/stats"
         "metadata-remover/utils"
 )
 
@@ -14,21 +15,17 @@ import (
 type Processor struct {
         logger      *logger.Logger
         previewMode bool
+        Stats       *stats.MetadataStats
 }
 
-// File type constants
-const (
-        TypeImage    = "image"
-        TypePDF      = "pdf"
-        TypeDocument = "document"
-        TypeUnknown  = "unknown"
-)
+// Using file type constants from stats package
 
 // NewProcessor creates a new processor
 func NewProcessor(logger *logger.Logger, previewMode bool) *Processor {
         return &Processor{
                 logger:      logger,
                 previewMode: previewMode,
+                Stats:       stats.NewMetadataStats(),
         }
 }
 
@@ -37,11 +34,14 @@ func (p *Processor) ProcessFile(filePath, ext string) error {
         // Determine file type based on extension
         fileType := p.getFileType(ext)
         
-        if fileType == TypeUnknown {
+        if fileType == stats.TypeUnknown {
                 p.logger.Warning("Unsupported file type: %s", ext)
                 utils.PrintWarning(fmt.Sprintf("Unsupported file type: %s (skipping %s)", ext, filepath.Base(filePath)))
                 return errors.New("unsupported file type")
         }
+
+        // Track file in statistics
+        p.Stats.AddFile(fileType)
 
         // Process file based on type
         var err error

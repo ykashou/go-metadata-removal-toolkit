@@ -70,7 +70,7 @@ func (s *Scanner) ScanDirectory(dirPath string, recursive bool) (int, int, error
 // ProcessFile processes a single file
 func (s *Scanner) ProcessFile(filePath string) error {
         // Get file info
-        fileInfo, err := os.Stat(filePath)
+        _, err := os.Stat(filePath)
         if err != nil {
                 s.logger.Error("Error accessing file %s: %v", filePath, err)
                 if s.verbose {
