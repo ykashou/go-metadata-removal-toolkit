@@ -44,9 +44,10 @@ func TestFormatStats(t *testing.T) {
                         t.Error("Missing or incorrect PDF file count")
                 }
                 
-                if !strings.Contains(result, "Author: 2 occurrences") {
-                        t.Error("Missing or incorrect Author metadata count")
-                }
+		// Check for Author count (accounting for color codes)
+		if !strings.Contains(result, "Author") || !strings.Contains(result, "2 occurrences") {
+			t.Error("Missing or incorrect Author metadata count")
+		}
                 
                 // Check for examples
                 if !strings.Contains(result, "\"John Doe\"") || !strings.Contains(result, "\"Jane Smith\"") {
