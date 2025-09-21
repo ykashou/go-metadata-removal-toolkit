@@ -10,7 +10,7 @@ import (
         "io/ioutil"
         "regexp"
 
-        "metadata-remover/utils"
+        "metadata-remover/src/utils"
 )
 
 // ProcessDocument removes metadata from document files

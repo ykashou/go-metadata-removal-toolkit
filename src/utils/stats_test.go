@@ -1,7 +1,7 @@
 package utils
 
 import (
-        "metadata-remover/stats"
+        "metadata-remover/src/stats"
         "strings"
         "testing"
 )

@@ -7,10 +7,10 @@ import (
         "path/filepath"
         "strings"
 
-        "metadata-remover/logger"
-        "metadata-remover/processor"
-        "metadata-remover/stats"
-        "metadata-remover/utils"
+        "metadata-remover/src/logger"
+        "metadata-remover/src/processor"
+        "metadata-remover/src/stats"
+        "metadata-remover/src/utils"
 )
 
 // Scanner handles the file scanning and processing

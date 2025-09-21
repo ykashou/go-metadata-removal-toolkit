@@ -3,7 +3,7 @@ package utils
 import (
         "encoding/json"
         "fmt"
-        "metadata-remover/stats"
+        "metadata-remover/src/stats"
         "sort"
         "strings"
 )
