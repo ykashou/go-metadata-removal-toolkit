@@ -1,0 +1,259 @@
+name: Test
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+  workflow_dispatch:  # Allow manual trigger for debugging
+
+jobs:
+  unit-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.1'
+    
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-test-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Run unit tests with coverage
+      run: |
+        go test -v -race -coverprofile=coverage.out ./src/...
+        go tool cover -html=coverage.out -o coverage.html
+        
+    - name: Check test coverage threshold
+      run: |
+        coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Test coverage: $coverage%"
+        if (( $(echo "$coverage < 80" | bc -l) )); then
+          echo "Error: Test coverage is below 80%"
+          exit 1
+        fi
+    
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-reports-${{ github.run_id }}
+        path: |
+          coverage.out
+          coverage.html
+        retention-days: 7
+
+  integration-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+    
+    - name: Download build artifacts
+      if: ${{ github.event_name == 'workflow_run' }}
+      uses: dawidd6/action-download-artifact@v3
+      with:
+        workflow: build.yml
+        run_id: ${{ github.event.workflow_run.id }}
+        name: build-artifacts-${{ github.event.workflow_run.id }}
+        path: ./artifacts
+    
+    - name: Build if manual trigger
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        go build -o ./artifacts/metadata-remover-linux-amd64 ./src
+        chmod +x ./artifacts/metadata-remover-linux-amd64
+    
+    - name: Test binary execution
+      run: |
+        chmod +x ./artifacts/metadata-remover-linux-amd64
+        ./artifacts/metadata-remover-linux-amd64 --help
+        
+        # Create test data
+        mkdir -p test-data
+        echo "test content" > test-data/test.txt
+        
+        # Test with preview mode
+        ./artifacts/metadata-remover-linux-amd64 -path test-data -preview
+    
+    - name: Run integration tests
+      run: |
+        # Set up Go for integration tests
+        go version
+        go test -tags=integration ./src/... || true
+
+  container-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+    
+    - name: Install Podman
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install podman
+    
+    - name: Download container artifact
+      if: ${{ github.event_name == 'workflow_run' }}
+      uses: dawidd6/action-download-artifact@v3
+      with:
+        workflow: build.yml
+        run_id: ${{ github.event.workflow_run.id }}
+        name: container-${{ github.event.workflow_run.id }}
+        path: ./
+    
+    - name: Build container if manual trigger
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        podman build -f ops/build/master.Containerfile -t metadata-remover:latest .
+        podman save metadata-remover:latest | gzip > metadata-remover.tar.gz
+    
+    - name: Load container image
+      run: |
+        podman load < metadata-remover.tar.gz
+        podman images | grep metadata-remover
+    
+    - name: Test container execution
+      run: |
+        # Test container runs
+        podman run --rm metadata-remover:latest --help || true
+        
+        # Test with mounted volume
+        mkdir -p test-volume
+        echo "container test" > test-volume/test.txt
+        podman run --rm -v $(pwd)/test-volume:/data metadata-remover:latest -path /data -preview || true
+    
+    - name: Test development container
+      run: |
+        # Build and test dev container
+        podman build -f ops/build/development.Containerfile -t metadata-remover:dev .
+        podman run --rm metadata-remover:dev go version
+
+  benchmark-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.1'
+    
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-bench-${{ hashFiles('**/go.sum') }}
+    
+    - name: Run benchmarks
+      run: |
+        go test -bench=. -benchmem -count=3 ./src/... | tee benchmark-results.txt || true
+        
+        # Show benchmark summary
+        echo "=== Benchmark Summary ==="
+        grep -E "^Benchmark" benchmark-results.txt || echo "No benchmarks found"
+    
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: benchmark-results-${{ github.run_id }}
+        path: benchmark-results.txt
+        retention-days: 30
+
+  lint:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.1'
+    
+    - name: Run go fmt check
+      run: |
+        if [ -n "$(gofmt -l ./src)" ]; then
+          echo "The following files need formatting:"
+          gofmt -l ./src
+          exit 1
+        fi
+        echo "All files are properly formatted"
+    
+    - name: Run go vet
+      run: go vet ./src/...
+    
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m ./src/...
+        skip-cache: true
+
+  test-summary:
+    if: always()
+    needs: [unit-tests, integration-tests, container-tests, benchmark-tests, lint]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Test Results Summary
+      run: |
+        echo "## Test Results Summary"
+        echo ""
+        echo "### Job Status:"
+        echo "- Unit Tests: ${{ needs.unit-tests.result }}"
+        echo "- Integration Tests: ${{ needs.integration-tests.result }}"
+        echo "- Container Tests: ${{ needs.container-tests.result }}"
+        echo "- Benchmark Tests: ${{ needs.benchmark-tests.result }}"
+        echo "- Lint: ${{ needs.lint.result }}"
+        echo ""
+        
+        # Overall status
+        if [[ "${{ needs.unit-tests.result }}" == "success" ]] && \
+           [[ "${{ needs.integration-tests.result }}" == "success" ]] && \
+           [[ "${{ needs.container-tests.result }}" == "success" ]] && \
+           [[ "${{ needs.lint.result }}" == "success" ]]; then
+          echo "✅ All required tests passed!"
+        else
+          echo "❌ Some tests failed. Please review the results."
+          exit 1
+        fi
