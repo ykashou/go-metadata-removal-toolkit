@@ -1,0 +1,134 @@
+//line /workspace/src/main.go:1:1
+package main; import _ "runtime/coverage"
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"metadata-remover/src/logger"
+	"metadata-remover/src/scanner"
+	"metadata-remover/src/utils"
+)
+
+var (
+	dirPath      string
+	recursive    bool
+	previewMode  bool
+	verboseMode  bool
+	outputFormat string
+	version      bool
+)
+
+const (
+	appVersion = "1.0.0"
+)
+
+func init() {goCover_1b6854d53354__0[0] = 1 ; goCover_1b6854d53354__0[1] = goCover_1b6854d53354_P ; goCover_1b6854d53354__0[2] = 0 ; goCover_1b6854d53354__0[3] = 1;
+	flag.StringVar(&dirPath, "path", ".", "Path to directory or file to process")
+	flag.BoolVar(&recursive, "recursive", false, "Recursively process subdirectories")
+	flag.BoolVar(&previewMode, "preview", false, "Preview mode (no actual changes)")
+	flag.BoolVar(&verboseMode, "verbose", false, "Verbose output")
+	flag.StringVar(&outputFormat, "output", "terminal", "Output format (terminal, json)")
+	flag.BoolVar(&version, "version", false, "Show version information")
+
+	// Add aliases for flags
+	flag.StringVar(&dirPath, "p", ".", "Path to directory or file to process (shorthand)")
+	flag.BoolVar(&recursive, "r", false, "Recursively process subdirectories (shorthand)")
+	flag.BoolVar(&previewMode, "preview-only", false, "Preview mode (no actual changes)")
+	flag.BoolVar(&verboseMode, "v", false, "Verbose output (shorthand)")
+}
+
+func main() {goCover_1b6854d53354__1[0] = 20 ; goCover_1b6854d53354__1[1] = goCover_1b6854d53354_P ; goCover_1b6854d53354__1[2] = 1 ; goCover_1b6854d53354__1[3] = 1;
+	flag.Parse()
+
+	if version {goCover_1b6854d53354__1[11] = 1;
+		fmt.Printf("go-metadata-removal-utility v%s\n", appVersion)
+		os.Exit(0)
+	}
+
+	// Check if path exists
+	goCover_1b6854d53354__1[4] = 1;_, err := os.Stat(dirPath)
+	if err != nil {goCover_1b6854d53354__1[12] = 1;
+		utils.PrintError(fmt.Sprintf("Error accessing path %s: %v", dirPath, err))
+		os.Exit(1)
+	}
+
+	// Create logger
+	goCover_1b6854d53354__1[5] = 1;logFileName := fmt.Sprintf("metadata_removal_%s.log", time.Now().Format("20060102_150405"))
+	logFilePath := filepath.Join(".", logFileName)
+	log, err := logger.NewLogger(logFilePath)
+	if err != nil {goCover_1b6854d53354__1[13] = 1;
+		utils.PrintError(fmt.Sprintf("Error creating log file: %v", err))
+		os.Exit(1)
+	}
+	goCover_1b6854d53354__1[6] = 1;defer log.Close()
+
+	// Initialize scanner
+	s := scanner.NewScanner(log, previewMode, verboseMode)
+
+	// Print initial information
+	utils.PrintInfo(fmt.Sprintf("Starting metadata removal utility"))
+	utils.PrintInfo(fmt.Sprintf("Path: %s", dirPath))
+	utils.PrintInfo(fmt.Sprintf("Recursive mode: %v", recursive))
+	utils.PrintInfo(fmt.Sprintf("Preview mode: %v", previewMode))
+	utils.PrintInfo(fmt.Sprintf("Log file: %s", logFilePath))
+	utils.PrintInfo("")
+
+	// Process files
+	startTime := time.Now()
+
+	// Get file information
+	fileInfo, err := os.Stat(dirPath)
+	if err != nil {goCover_1b6854d53354__1[14] = 1;
+		utils.PrintError(fmt.Sprintf("Error accessing path %s: %v", dirPath, err))
+		os.Exit(1)
+	}
+
+	goCover_1b6854d53354__1[7] = 1;var fileCount, processedCount int
+	// Check if path is a file or directory
+	if fileInfo.IsDir() {goCover_1b6854d53354__1[15] = 1;
+		fileCount, processedCount, err = s.ScanDirectory(dirPath, recursive)
+	} else{ goCover_1b6854d53354__1[16] = 1;{
+		// Single file mode
+		err = s.ProcessFile(dirPath)
+		if err == nil {goCover_1b6854d53354__1[17] = 1;
+			fileCount = 1
+			processedCount = 1
+		}
+	}}
+
+	goCover_1b6854d53354__1[8] = 1;if err != nil {goCover_1b6854d53354__1[18] = 1;
+		utils.PrintError(fmt.Sprintf("Error during processing: %v", err))
+		os.Exit(1)
+	}
+
+	// Print summary
+	goCover_1b6854d53354__1[9] = 1;duration := time.Since(startTime)
+	utils.PrintInfo("")
+	utils.PrintSuccess(fmt.Sprintf("Processing complete!"))
+	utils.PrintSuccess(fmt.Sprintf("Files scanned: %d", fileCount))
+	utils.PrintSuccess(fmt.Sprintf("Files processed: %d", processedCount))
+	utils.PrintSuccess(fmt.Sprintf("Time taken: %v", duration))
+	utils.PrintSuccess(fmt.Sprintf("Log file: %s", logFilePath))
+
+	// Print detailed metadata statistics
+	if processedCount > 0 {goCover_1b6854d53354__1[19] = 1;
+		// Get statistics from the scanner
+		metadataStats := s.GetStats()
+
+		// Format and display stats based on output format
+		switch outputFormat {
+		case "json":goCover_1b6854d53354__1[20] = 1;
+			fmt.Println(utils.FormatStatsAsJSON(metadataStats))
+		default:goCover_1b6854d53354__1[21] = 1;
+			fmt.Println(utils.FormatStatsAsText(metadataStats))
+		}
+	}
+
+	goCover_1b6854d53354__1[10] = 1;if previewMode {goCover_1b6854d53354__1[22] = 1;
+		utils.PrintWarning("Preview mode: No files were modified")
+	}
+}

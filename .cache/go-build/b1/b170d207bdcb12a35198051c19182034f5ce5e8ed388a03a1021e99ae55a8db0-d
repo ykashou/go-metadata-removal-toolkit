@@ -1,0 +1,6 @@
+./colors.go
+./fileutils.go
+./stats.go
+./colors_test.go
+./fileutils_test.go
+./stats_test.go

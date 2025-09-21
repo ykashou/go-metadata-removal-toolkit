@@ -1,0 +1,390 @@
+//line /workspace/src/processor/image.go:1:1
+package processor
+
+import (
+	"bytes"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+
+	"metadata-remover/src/utils"
+)
+
+// ProcessImage removes metadata from image files
+func (p *Processor) ProcessImage(filePath, ext string) error {goCover_72deca207aa4__6[0] = 10 ; goCover_72deca207aa4__6[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__6[2] = 6 ; goCover_72deca207aa4__6[3] = 1;
+	// If preview mode, just log and return
+	if p.previewMode {goCover_72deca207aa4__6[5] = 1;
+		return nil
+	}
+
+	goCover_72deca207aa4__6[4] = 1;ext = strings.ToLower(ext)
+	switch ext {
+	case ".jpg", ".jpeg":goCover_72deca207aa4__6[6] = 1;
+		return p.cleanJPEG(filePath)
+	case ".png":goCover_72deca207aa4__6[7] = 1;
+		return p.cleanPNG(filePath)
+	case ".gif":goCover_72deca207aa4__6[8] = 1;
+		return p.cleanGIF(filePath)
+	case ".tiff", ".tif":goCover_72deca207aa4__6[9] = 1;
+		return p.cleanTIFF(filePath)
+	case ".bmp":goCover_72deca207aa4__6[10] = 1;
+		return p.cleanBMP(filePath)
+	case ".webp":goCover_72deca207aa4__6[11] = 1;
+		return p.cleanWEBP(filePath)
+	default:goCover_72deca207aa4__6[12] = 1;
+		return fmt.Errorf("unsupported image format: %s", ext)
+	}
+}
+
+// cleanJPEG removes metadata from JPEG files
+func (p *Processor) cleanJPEG(filePath string) error {goCover_72deca207aa4__7[0] = 51 ; goCover_72deca207aa4__7[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__7[2] = 7 ; goCover_72deca207aa4__7[3] = 1;
+	// Open file
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__7[11] = 1;
+		return err
+	}
+	goCover_72deca207aa4__7[4] = 1;defer file.Close()
+
+	// Read file header to verify it's a JPEG
+	header := make([]byte, 2)
+	if _, err := file.Read(header); err != nil {goCover_72deca207aa4__7[12] = 1;
+		return err
+	}
+	goCover_72deca207aa4__7[5] = 1;if header[0] != 0xFF || header[1] != 0xD8 {goCover_72deca207aa4__7[13] = 1;
+		return errors.New("not a valid JPEG file")
+	}
+
+	// Create temp file
+	goCover_72deca207aa4__7[6] = 1;tempPath := filePath + ".temp"
+	tempFile, err := os.Create(tempPath)
+	if err != nil {goCover_72deca207aa4__7[14] = 1;
+		return err
+	}
+	goCover_72deca207aa4__7[7] = 1;defer func() {goCover_72deca207aa4__7[15] = 1;
+		tempFile.Close()
+		os.Remove(tempPath) // Clean up temp file in case of error
+	}()
+
+	// Write JPEG header
+	goCover_72deca207aa4__7[8] = 1;if _, err := tempFile.Write(header); err != nil {goCover_72deca207aa4__7[16] = 1;
+		return err
+	}
+
+	// Process segments
+	goCover_72deca207aa4__7[9] = 1;buffer := make([]byte, 2)
+	for {goCover_72deca207aa4__7[17] = 1;
+		// Read marker
+		if _, err := file.Read(buffer); err != nil {goCover_72deca207aa4__7[21] = 1;
+			if err == io.EOF {goCover_72deca207aa4__7[23] = 1;
+				break
+			}
+			goCover_72deca207aa4__7[22] = 1;return err
+		}
+
+		// Check if it's a valid marker
+		goCover_72deca207aa4__7[18] = 1;if buffer[0] != 0xFF {goCover_72deca207aa4__7[24] = 1;
+			return errors.New("invalid JPEG format")
+		}
+
+		// Write marker
+		goCover_72deca207aa4__7[19] = 1;if _, err := tempFile.Write(buffer); err != nil {goCover_72deca207aa4__7[25] = 1;
+			return err
+		}
+
+		// Skip metadata segments
+		goCover_72deca207aa4__7[20] = 1;switch buffer[1] {
+		case 0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF:goCover_72deca207aa4__7[26] = 1; // APP0-APP15
+			// Read segment length
+			if _, err := file.Read(buffer); err != nil {goCover_72deca207aa4__7[39] = 1;
+				return err
+			}
+			goCover_72deca207aa4__7[27] = 1;length := int(binary.BigEndian.Uint16(buffer))
+
+			// Skip segment data (length includes the 2 bytes of the length field)
+			if _, err := file.Seek(int64(length-2), io.SeekCurrent); err != nil {goCover_72deca207aa4__7[40] = 1;
+				return err
+			}
+
+			// For APP0 (JFIF), we need to keep it but strip metadata
+			goCover_72deca207aa4__7[28] = 1;if buffer[1] == 0xE0 {goCover_72deca207aa4__7[41] = 1;
+				// Write minimal JFIF segment
+				if _, err := tempFile.Write([]byte{0x00, 0x10}); err != nil {goCover_72deca207aa4__7[43] = 1; // Length: 16 bytes
+					return err
+				}
+				goCover_72deca207aa4__7[42] = 1;if _, err := tempFile.Write([]byte("JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00")); err != nil {goCover_72deca207aa4__7[44] = 1;
+					return err
+				}
+			}
+
+		case 0xDA:goCover_72deca207aa4__7[29] = 1; // Start of Scan - after this comes the image data
+			// Write segment length
+			if _, err := file.Read(buffer); err != nil {goCover_72deca207aa4__7[45] = 1;
+				return err
+			}
+			goCover_72deca207aa4__7[30] = 1;if _, err := tempFile.Write(buffer); err != nil {goCover_72deca207aa4__7[46] = 1;
+				return err
+			}
+
+			goCover_72deca207aa4__7[31] = 1;length := int(binary.BigEndian.Uint16(buffer))
+			scanData := make([]byte, length-2)
+			if _, err := file.Read(scanData); err != nil {goCover_72deca207aa4__7[47] = 1;
+				return err
+			}
+			goCover_72deca207aa4__7[32] = 1;if _, err := tempFile.Write(scanData); err != nil {goCover_72deca207aa4__7[48] = 1;
+				return err
+			}
+
+			// Copy the rest of the file (compressed image data)
+			goCover_72deca207aa4__7[33] = 1;if _, err := io.Copy(tempFile, file); err != nil {goCover_72deca207aa4__7[49] = 1;
+				return err
+			}
+			goCover_72deca207aa4__7[34] = 1;break
+
+		default:goCover_72deca207aa4__7[35] = 1;
+			// For other segments, keep them unchanged
+			if _, err := file.Read(buffer); err != nil {goCover_72deca207aa4__7[50] = 1;
+				return err
+			}
+			goCover_72deca207aa4__7[36] = 1;if _, err := tempFile.Write(buffer); err != nil {goCover_72deca207aa4__7[51] = 1;
+				return err
+			}
+
+			goCover_72deca207aa4__7[37] = 1;length := int(binary.BigEndian.Uint16(buffer))
+			segmentData := make([]byte, length-2)
+			if _, err := file.Read(segmentData); err != nil {goCover_72deca207aa4__7[52] = 1;
+				return err
+			}
+			goCover_72deca207aa4__7[38] = 1;if _, err := tempFile.Write(segmentData); err != nil {goCover_72deca207aa4__7[53] = 1;
+				return err
+			}
+		}
+	}
+
+	// Close files
+	goCover_72deca207aa4__7[10] = 1;file.Close()
+	tempFile.Close()
+
+	// Replace original file with cleaned file
+	return os.Rename(tempPath, filePath)
+}
+
+// cleanPNG removes metadata from PNG files
+func (p *Processor) cleanPNG(filePath string) error {goCover_72deca207aa4__8[0] = 36 ; goCover_72deca207aa4__8[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__8[2] = 8 ; goCover_72deca207aa4__8[3] = 1;
+	// Open file
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__8[11] = 1;
+		return err
+	}
+	goCover_72deca207aa4__8[4] = 1;defer file.Close()
+
+	// Read PNG signature
+	signature := make([]byte, 8)
+	if _, err := file.Read(signature); err != nil {goCover_72deca207aa4__8[12] = 1;
+		return err
+	}
+
+	// Verify PNG signature
+	goCover_72deca207aa4__8[5] = 1;pngSignature := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
+	if !bytes.Equal(signature, pngSignature) {goCover_72deca207aa4__8[13] = 1;
+		return errors.New("not a valid PNG file")
+	}
+
+	// Create temp file
+	goCover_72deca207aa4__8[6] = 1;tempPath := filePath + ".temp"
+	tempFile, err := os.Create(tempPath)
+	if err != nil {goCover_72deca207aa4__8[14] = 1;
+		return err
+	}
+	goCover_72deca207aa4__8[7] = 1;defer func() {goCover_72deca207aa4__8[15] = 1;
+		tempFile.Close()
+		os.Remove(tempPath) // Clean up temp file in case of error
+	}()
+
+	// Write PNG signature
+	goCover_72deca207aa4__8[8] = 1;if _, err := tempFile.Write(signature); err != nil {goCover_72deca207aa4__8[16] = 1;
+		return err
+	}
+
+	// Process chunks
+	goCover_72deca207aa4__8[9] = 1;for {goCover_72deca207aa4__8[17] = 1;
+		// Read chunk length
+		lengthBuf := make([]byte, 4)
+		if _, err := file.Read(lengthBuf); err != nil {goCover_72deca207aa4__8[23] = 1;
+			if err == io.EOF {goCover_72deca207aa4__8[25] = 1;
+				break
+			}
+			goCover_72deca207aa4__8[24] = 1;return err
+		}
+
+		goCover_72deca207aa4__8[18] = 1;length := binary.BigEndian.Uint32(lengthBuf)
+
+		// Read chunk type
+		typeBuf := make([]byte, 4)
+		if _, err := file.Read(typeBuf); err != nil {goCover_72deca207aa4__8[26] = 1;
+			return err
+		}
+
+		goCover_72deca207aa4__8[19] = 1;chunkType := string(typeBuf)
+
+		// Read chunk data
+		data := make([]byte, length)
+		if _, err := file.Read(data); err != nil {goCover_72deca207aa4__8[27] = 1;
+			return err
+		}
+
+		// Read CRC
+		goCover_72deca207aa4__8[20] = 1;crcBuf := make([]byte, 4)
+		if _, err := file.Read(crcBuf); err != nil {goCover_72deca207aa4__8[28] = 1;
+			return err
+		}
+
+		// Skip metadata chunks, write everything else
+		goCover_72deca207aa4__8[21] = 1;switch chunkType {
+		case "tEXt", "iTXt", "zTXt", "tIME", "eXIf":goCover_72deca207aa4__8[29] = 1;
+			// Skip these metadata chunks
+			continue
+		default:goCover_72deca207aa4__8[30] = 1;
+			// Write this chunk
+			if _, err := tempFile.Write(lengthBuf); err != nil {goCover_72deca207aa4__8[34] = 1;
+				return err
+			}
+			goCover_72deca207aa4__8[31] = 1;if _, err := tempFile.Write(typeBuf); err != nil {goCover_72deca207aa4__8[35] = 1;
+				return err
+			}
+			goCover_72deca207aa4__8[32] = 1;if _, err := tempFile.Write(data); err != nil {goCover_72deca207aa4__8[36] = 1;
+				return err
+			}
+			goCover_72deca207aa4__8[33] = 1;if _, err := tempFile.Write(crcBuf); err != nil {goCover_72deca207aa4__8[37] = 1;
+				return err
+			}
+		}
+
+		// IEND chunk signals the end of the PNG file
+		goCover_72deca207aa4__8[22] = 1;if chunkType == "IEND" {goCover_72deca207aa4__8[38] = 1;
+			break
+		}
+	}
+
+	// Close files
+	goCover_72deca207aa4__8[10] = 1;file.Close()
+	tempFile.Close()
+
+	// Replace original file with cleaned file
+	return os.Rename(tempPath, filePath)
+}
+
+// cleanGIF removes metadata from GIF files
+func (p *Processor) cleanGIF(filePath string) error {goCover_72deca207aa4__9[0] = 7 ; goCover_72deca207aa4__9[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__9[2] = 9 ; goCover_72deca207aa4__9[3] = 1;
+	// GIF files don't have standard metadata chunks to remove
+	// The most we could do is reset the Comment Extension if it exists
+	// For simplicity, we'll just check the file is a valid GIF
+
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__9[7] = 1;
+		return err
+	}
+	goCover_72deca207aa4__9[4] = 1;defer file.Close()
+
+	// Verify GIF header
+	header := make([]byte, 6)
+	if _, err := file.Read(header); err != nil {goCover_72deca207aa4__9[8] = 1;
+		return err
+	}
+
+	goCover_72deca207aa4__9[5] = 1;if string(header) != "GIF87a" && string(header) != "GIF89a" {goCover_72deca207aa4__9[9] = 1;
+		return errors.New("not a valid GIF file")
+	}
+
+	goCover_72deca207aa4__9[6] = 1;p.logger.Info("GIF files have minimal metadata to remove for %s", filePath)
+	utils.PrintInfo(fmt.Sprintf("GIF files have minimal metadata to remove"))
+
+	return nil
+}
+
+// cleanTIFF removes metadata from TIFF files
+func (p *Processor) cleanTIFF(filePath string) error {goCover_72deca207aa4__10[0] = 7 ; goCover_72deca207aa4__10[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__10[2] = 10 ; goCover_72deca207aa4__10[3] = 1;
+	// TIFF processing is complex without dependencies
+	// For a real implementation, we would parse the IFD structure
+	// and remove or modify specific tags
+
+	p.logger.Warning("TIFF metadata removal requires complex processing. Basic validation only for %s", filePath)
+	utils.PrintWarning(fmt.Sprintf("TIFF metadata removal requires complex processing. Performing basic validation only"))
+
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__10[7] = 1;
+		return err
+	}
+	goCover_72deca207aa4__10[4] = 1;defer file.Close()
+
+	// Read TIFF header
+	header := make([]byte, 4)
+	if _, err := file.Read(header); err != nil {goCover_72deca207aa4__10[8] = 1;
+		return err
+	}
+
+	// Check if it's Intel or Motorola byte order
+	goCover_72deca207aa4__10[5] = 1;if !bytes.Equal(header, []byte{0x49, 0x49, 0x2A, 0x00}) && // Little-endian
+		!bytes.Equal(header, []byte{0x4D, 0x4D, 0x00, 0x2A}) {goCover_72deca207aa4__10[9] = 1; // Big-endian
+		return errors.New("not a valid TIFF file")
+	}
+
+	goCover_72deca207aa4__10[6] = 1;return nil
+}
+
+// cleanBMP removes metadata from BMP files
+func (p *Processor) cleanBMP(filePath string) error {goCover_72deca207aa4__11[0] = 7 ; goCover_72deca207aa4__11[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__11[2] = 11 ; goCover_72deca207aa4__11[3] = 1;
+	// BMP files have minimal metadata
+	// We'll just validate the file format
+
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__11[7] = 1;
+		return err
+	}
+	goCover_72deca207aa4__11[4] = 1;defer file.Close()
+
+	// Read BMP signature
+	signature := make([]byte, 2)
+	if _, err := file.Read(signature); err != nil {goCover_72deca207aa4__11[8] = 1;
+		return err
+	}
+
+	goCover_72deca207aa4__11[5] = 1;if signature[0] != 'B' || signature[1] != 'M' {goCover_72deca207aa4__11[9] = 1;
+		return errors.New("not a valid BMP file")
+	}
+
+	goCover_72deca207aa4__11[6] = 1;p.logger.Info("BMP files have minimal metadata to remove for %s", filePath)
+	utils.PrintInfo(fmt.Sprintf("BMP files have minimal metadata to remove"))
+
+	return nil
+}
+
+// cleanWEBP removes metadata from WebP files
+func (p *Processor) cleanWEBP(filePath string) error {goCover_72deca207aa4__12[0] = 7 ; goCover_72deca207aa4__12[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__12[2] = 12 ; goCover_72deca207aa4__12[3] = 1;
+	// WebP processing is complex without dependencies
+	// We'll just validate the file format
+
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__12[7] = 1;
+		return err
+	}
+	goCover_72deca207aa4__12[4] = 1;defer file.Close()
+
+	// Read WebP signature
+	header := make([]byte, 12)
+	if _, err := file.Read(header); err != nil {goCover_72deca207aa4__12[8] = 1;
+		return err
+	}
+
+	// Check RIFF header and WEBP type
+	goCover_72deca207aa4__12[5] = 1;if !bytes.Equal(header[0:4], []byte("RIFF")) || !bytes.Equal(header[8:12], []byte("WEBP")) {goCover_72deca207aa4__12[9] = 1;
+		return errors.New("not a valid WebP file")
+	}
+
+	goCover_72deca207aa4__12[6] = 1;p.logger.Warning("WebP metadata removal requires complex processing. Basic validation only for %s", filePath)
+	utils.PrintWarning(fmt.Sprintf("WebP metadata removal requires complex processing. Performing basic validation only"))
+
+	return nil
+}

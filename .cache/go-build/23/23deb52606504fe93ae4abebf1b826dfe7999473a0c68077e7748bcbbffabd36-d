@@ -1,0 +1,187 @@
+//line /workspace/src/utils/stats.go:1:1
+package utils
+
+import (
+	"encoding/json"
+	"fmt"
+	"metadata-remover/src/stats"
+	"sort"
+	"strings"
+)
+
+// FormatStats generates a human-readable report of metadata statistics
+func FormatStats(stats *stats.MetadataStats, format string) string {goCover_88578f0c3c39__15[0] = 3 ; goCover_88578f0c3c39__15[1] = goCover_88578f0c3c39_P ; goCover_88578f0c3c39__15[2] = 15 ; goCover_88578f0c3c39__15[3] = 1;
+	if format == "json" {goCover_88578f0c3c39__15[5] = 1;
+		return FormatStatsAsJSON(stats)
+	}
+	goCover_88578f0c3c39__15[4] = 1;return FormatStatsAsText(stats)
+}
+
+// FormatStatsAsText generates a human-readable text report of metadata statistics
+func FormatStatsAsText(stats *stats.MetadataStats) string {goCover_88578f0c3c39__16[0] = 37 ; goCover_88578f0c3c39__16[1] = goCover_88578f0c3c39_P ; goCover_88578f0c3c39__16[2] = 16 ; goCover_88578f0c3c39__16[3] = 1;
+	var sb strings.Builder
+
+	// Title
+	sb.WriteString("\n")
+	sb.WriteString(Blue("=== METADATA REMOVAL STATISTICS ==="))
+	sb.WriteString("\n\n")
+
+	// Summary section
+	sb.WriteString(Blue("SUMMARY:"))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf("Total files processed: %d\n", stats.TotalFiles))
+	sb.WriteString(fmt.Sprintf("Total metadata fields found: %d\n", stats.TotalMetadataFound))
+	sb.WriteString("\n")
+
+	// Files by type section
+	sb.WriteString(Blue("FILES BY TYPE:"))
+	sb.WriteString("\n")
+	if len(stats.ByFileType) == 0 {goCover_88578f0c3c39__16[7] = 1;
+		sb.WriteString("No files processed.\n")
+	} else{ goCover_88578f0c3c39__16[8] = 1;{
+		// Convert map to slice for sorting
+		type fileTypeCount struct {
+			Type  string
+			Count int
+		}
+		fileTypes := make([]fileTypeCount, 0, len(stats.ByFileType))
+		for fileType, count := range stats.ByFileType {goCover_88578f0c3c39__16[11] = 1;
+			fileTypes = append(fileTypes, fileTypeCount{fileType, count})
+		}
+
+		// Sort by count (descending)
+		goCover_88578f0c3c39__16[9] = 1;sort.Slice(fileTypes, func(i, j int) bool {goCover_88578f0c3c39__16[12] = 1;
+			return fileTypes[i].Count > fileTypes[j].Count
+		})
+
+		// Print each file type
+		goCover_88578f0c3c39__16[10] = 1;for _, ft := range fileTypes {goCover_88578f0c3c39__16[13] = 1;
+			sb.WriteString(fmt.Sprintf("  %s: %d files\n", formatFileType(ft.Type), ft.Count))
+		}
+	}}
+	goCover_88578f0c3c39__16[4] = 1;sb.WriteString("\n")
+
+	// Metadata by type section
+	sb.WriteString(Blue("METADATA FIELDS FOUND:"))
+	sb.WriteString("\n")
+	if len(stats.ByMetadataType) == 0 {goCover_88578f0c3c39__16[14] = 1;
+		sb.WriteString("No metadata found in processed files.\n")
+	} else{ goCover_88578f0c3c39__16[15] = 1;{
+		// Convert map to slice for sorting
+		type metadataTypeCount struct {
+			Type     string
+			Count    int
+			Examples []string
+		}
+		metadataTypes := make([]metadataTypeCount, 0, len(stats.ByMetadataType))
+		for metaType, field := range stats.ByMetadataType {goCover_88578f0c3c39__16[18] = 1;
+			metadataTypes = append(metadataTypes, metadataTypeCount{
+				Type:     metaType,
+				Count:    field.Count,
+				Examples: field.Examples,
+			})
+		}
+
+		// Sort by count (descending)
+		goCover_88578f0c3c39__16[16] = 1;sort.Slice(metadataTypes, func(i, j int) bool {goCover_88578f0c3c39__16[19] = 1;
+			return metadataTypes[i].Count > metadataTypes[j].Count
+		})
+
+		// Print each metadata type
+		goCover_88578f0c3c39__16[17] = 1;for _, mt := range metadataTypes {goCover_88578f0c3c39__16[20] = 1;
+			sb.WriteString(fmt.Sprintf("  %s: %d occurrences\n", Yellow(mt.Type), mt.Count))
+
+			// Print examples if available
+			if len(mt.Examples) > 0 {goCover_88578f0c3c39__16[21] = 1;
+				sb.WriteString("    Examples: ")
+				for i, example := range mt.Examples {goCover_88578f0c3c39__16[23] = 1;
+					if i > 0 {goCover_88578f0c3c39__16[26] = 1;
+						sb.WriteString(", ")
+					}
+					// Truncate very long examples
+					goCover_88578f0c3c39__16[24] = 1;if len(example) > 50 {goCover_88578f0c3c39__16[27] = 1;
+						example = example[:47] + "..."
+					}
+					goCover_88578f0c3c39__16[25] = 1;sb.WriteString(fmt.Sprintf("\"%s\"", example))
+				}
+				goCover_88578f0c3c39__16[22] = 1;sb.WriteString("\n")
+			}
+		}
+	}}
+	goCover_88578f0c3c39__16[5] = 1;sb.WriteString("\n")
+
+	// Metadata by file type section
+	sb.WriteString(Blue("METADATA BY FILE TYPE:"))
+	sb.WriteString("\n")
+	if len(stats.FileTypeMetadata) == 0 {goCover_88578f0c3c39__16[28] = 1;
+		sb.WriteString("No metadata found in processed files.\n")
+	} else{ goCover_88578f0c3c39__16[29] = 1;{
+		// Convert map to slice for sorting
+		type fileTypeData struct {
+			Type     string
+			Metadata map[string]int
+		}
+		fileTypes := make([]fileTypeData, 0, len(stats.FileTypeMetadata))
+		for fileType, metadata := range stats.FileTypeMetadata {goCover_88578f0c3c39__16[32] = 1;
+			fileTypes = append(fileTypes, fileTypeData{
+				Type:     fileType,
+				Metadata: metadata,
+			})
+		}
+
+		// Sort by file type
+		goCover_88578f0c3c39__16[30] = 1;sort.Slice(fileTypes, func(i, j int) bool {goCover_88578f0c3c39__16[33] = 1;
+			return fileTypes[i].Type < fileTypes[j].Type
+		})
+
+		// Print each file type and its metadata
+		goCover_88578f0c3c39__16[31] = 1;for _, ft := range fileTypes {goCover_88578f0c3c39__16[34] = 1;
+			sb.WriteString(fmt.Sprintf("  %s:\n", formatFileType(ft.Type)))
+
+			// Convert metadata map to slice for sorting
+			type metaCount struct {
+				Name  string
+				Count int
+			}
+			metadata := make([]metaCount, 0, len(ft.Metadata))
+			for name, count := range ft.Metadata {goCover_88578f0c3c39__16[37] = 1;
+				metadata = append(metadata, metaCount{name, count})
+			}
+
+			// Sort by count (descending)
+			goCover_88578f0c3c39__16[35] = 1;sort.Slice(metadata, func(i, j int) bool {goCover_88578f0c3c39__16[38] = 1;
+				return metadata[i].Count > metadata[j].Count
+			})
+
+			// Print each metadata field
+			goCover_88578f0c3c39__16[36] = 1;for _, meta := range metadata {goCover_88578f0c3c39__16[39] = 1;
+				sb.WriteString(fmt.Sprintf("    - %s: %d occurrences\n", meta.Name, meta.Count))
+			}
+		}
+	}}
+
+	goCover_88578f0c3c39__16[6] = 1;return sb.String()
+}
+
+// FormatStatsAsJSON generates a JSON representation of metadata statistics
+func FormatStatsAsJSON(stats *stats.MetadataStats) string {goCover_88578f0c3c39__17[0] = 3 ; goCover_88578f0c3c39__17[1] = goCover_88578f0c3c39_P ; goCover_88578f0c3c39__17[2] = 17 ; goCover_88578f0c3c39__17[3] = 1;
+	jsonBytes, err := json.MarshalIndent(stats, "", "  ")
+	if err != nil {goCover_88578f0c3c39__17[5] = 1;
+		return fmt.Sprintf("Error generating JSON: %v", err)
+	}
+	goCover_88578f0c3c39__17[4] = 1;return string(jsonBytes)
+}
+
+// formatFileType returns a formatted string for the file type
+func formatFileType(fileType string) string {goCover_88578f0c3c39__18[0] = 5 ; goCover_88578f0c3c39__18[1] = goCover_88578f0c3c39_P ; goCover_88578f0c3c39__18[2] = 18 ; goCover_88578f0c3c39__18[3] = 1;
+	switch fileType {
+	case stats.TypeImage:goCover_88578f0c3c39__18[4] = 1;
+		return "Images"
+	case stats.TypePDF:goCover_88578f0c3c39__18[5] = 1;
+		return "PDFs"
+	case stats.TypeDocument:goCover_88578f0c3c39__18[6] = 1;
+		return "Documents"
+	default:goCover_88578f0c3c39__18[7] = 1;
+		return fmt.Sprintf("%s files", strings.ToUpper(fileType[:1])+fileType[1:])
+	}
+}

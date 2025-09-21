@@ -1,0 +1,16 @@
+=== RUN   TestLoggerCreation
+--- PASS: TestLoggerCreation (0.10s)
+=== RUN   TestLogLevels
+=== RUN   TestLogLevels/Info_level
+=== RUN   TestLogLevels/Success_level
+=== RUN   TestLogLevels/Warning_level
+=== RUN   TestLogLevels/Error_level
+--- PASS: TestLogLevels (0.00s)
+    --- PASS: TestLogLevels/Info_level (0.00s)
+    --- PASS: TestLogLevels/Success_level (0.00s)
+    --- PASS: TestLogLevels/Warning_level (0.00s)
+    --- PASS: TestLogLevels/Error_level (0.00s)
+=== RUN   TestLoggerClose
+--- PASS: TestLoggerClose (0.00s)
+PASS
+ok  	metadata-remover/src/logger	0.107s

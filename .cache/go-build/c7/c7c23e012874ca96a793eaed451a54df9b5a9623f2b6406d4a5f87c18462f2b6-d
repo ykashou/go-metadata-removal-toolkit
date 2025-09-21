@@ -1,0 +1,14 @@
+# test log
+getenv TMPDIR
+open /tmp/logger_test4168844378
+open /tmp/logger_test4168844378
+stat /tmp/logger_test4168844378
+open /tmp/logger_test4168844378
+getenv TMPDIR
+open /tmp/logger_test1401207075
+open /tmp/logger_test1401207075
+open /tmp/logger_test1401207075
+getenv TMPDIR
+open /tmp/logger_test1102706016
+open /tmp/logger_test1102706016
+open /tmp/logger_test1102706016

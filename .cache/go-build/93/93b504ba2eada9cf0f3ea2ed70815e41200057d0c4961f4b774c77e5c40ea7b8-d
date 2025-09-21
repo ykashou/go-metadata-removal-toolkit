@@ -1,0 +1,3 @@
+./colors.go
+./fileutils.go
+./stats.go

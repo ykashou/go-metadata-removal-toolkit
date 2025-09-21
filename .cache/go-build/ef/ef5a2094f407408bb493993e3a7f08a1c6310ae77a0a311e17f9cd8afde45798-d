@@ -1,0 +1,10 @@
+./document.go
+./image.go
+./pdf.go
+./processor.go
+./stats.go
+./document_test.go
+./image_test.go
+./pdf_test.go
+./processor_test.go
+./stats_test.go

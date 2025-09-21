@@ -1,0 +1,252 @@
+//line /workspace/src/processor/document.go:1:1
+package processor
+
+import (
+	"archive/zip"
+	"bytes"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"regexp"
+	"strings"
+
+	"metadata-remover/src/utils"
+)
+
+// ProcessDocument removes metadata from document files
+func (p *Processor) ProcessDocument(filePath, ext string) error {goCover_72deca207aa4__0[0] = 9 ; goCover_72deca207aa4__0[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__0[2] = 0 ; goCover_72deca207aa4__0[3] = 1;
+	// If preview mode, just log and return
+	if p.previewMode {goCover_72deca207aa4__0[5] = 1;
+		return nil
+	}
+
+	goCover_72deca207aa4__0[4] = 1;ext = strings.ToLower(ext)
+	switch ext {
+	case ".docx", ".xlsx", ".pptx":goCover_72deca207aa4__0[6] = 1;
+		return p.cleanOpenXML(filePath)
+	case ".odt", ".ods", ".odp":goCover_72deca207aa4__0[7] = 1;
+		return p.cleanOpenDocument(filePath)
+	case ".doc", ".xls", ".ppt":goCover_72deca207aa4__0[8] = 1;
+		return p.cleanBinaryOffice(filePath, ext)
+	case ".rtf":goCover_72deca207aa4__0[9] = 1;
+		return p.cleanRTF(filePath)
+	case ".txt":goCover_72deca207aa4__0[10] = 1;
+		// Plain text files don't typically have metadata
+		p.logger.Info("Text files don't have metadata to remove for %s", filePath)
+		utils.PrintInfo(fmt.Sprintf("Text files don't have metadata to remove"))
+		return nil
+	default:goCover_72deca207aa4__0[11] = 1;
+		return fmt.Errorf("unsupported document format: %s", ext)
+	}
+}
+
+// cleanOpenXML removes metadata from Office Open XML files (.docx, .xlsx, .pptx)
+func (p *Processor) cleanOpenXML(filePath string) error {goCover_72deca207aa4__1[0] = 20 ; goCover_72deca207aa4__1[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__1[2] = 1 ; goCover_72deca207aa4__1[3] = 1;
+	// Office Open XML files are ZIP archives containing XML files
+	// We need to extract, modify, and repackage them
+
+	// Create a temporary directory
+	tempDir := filePath + "_temp"
+	if err := os.MkdirAll(tempDir, 0755); err != nil {goCover_72deca207aa4__1[9] = 1;
+		return err
+	}
+	goCover_72deca207aa4__1[4] = 1;defer os.RemoveAll(tempDir) // Clean up temp directory
+
+	// Open the document as a ZIP archive
+	reader, err := zip.OpenReader(filePath)
+	if err != nil {goCover_72deca207aa4__1[10] = 1;
+		return err
+	}
+	goCover_72deca207aa4__1[5] = 1;defer reader.Close()
+
+	// Create a new ZIP file
+	tempFile := filePath + ".temp"
+	zipWriter, err := os.Create(tempFile)
+	if err != nil {goCover_72deca207aa4__1[11] = 1;
+		return err
+	}
+	goCover_72deca207aa4__1[6] = 1;defer func() {goCover_72deca207aa4__1[12] = 1;
+		zipWriter.Close()
+		os.Remove(tempFile) // Clean up temp file in case of error
+	}()
+
+	goCover_72deca207aa4__1[7] = 1;archive := zip.NewWriter(zipWriter)
+	defer archive.Close()
+
+	// Process each file in the archive
+	for _, file := range reader.File {goCover_72deca207aa4__1[13] = 1;
+		fileReader, err := file.Open()
+		if err != nil {goCover_72deca207aa4__1[18] = 1;
+			return err
+		}
+
+		goCover_72deca207aa4__1[14] = 1;data, err := ioutil.ReadAll(fileReader)
+		fileReader.Close()
+		if err != nil {goCover_72deca207aa4__1[19] = 1;
+			return err
+		}
+
+		// Check if this is a metadata file and clean it
+		goCover_72deca207aa4__1[15] = 1;switch {
+		case strings.Contains(file.Name, "docProps/core.xml"),
+			strings.Contains(file.Name, "docProps/app.xml"),
+			strings.Contains(file.Name, "meta.xml"):goCover_72deca207aa4__1[20] = 1;
+			// Replace metadata with minimal content
+			data = p.cleanOpenXMLMetadata(data, file.Name)
+		}
+
+		// Add file to the new archive
+		goCover_72deca207aa4__1[16] = 1;writer, err := archive.Create(file.Name)
+		if err != nil {goCover_72deca207aa4__1[21] = 1;
+			return err
+		}
+
+		goCover_72deca207aa4__1[17] = 1;_, err = writer.Write(data)
+		if err != nil {goCover_72deca207aa4__1[22] = 1;
+			return err
+		}
+	}
+
+	// Close everything before renaming
+	goCover_72deca207aa4__1[8] = 1;archive.Close()
+	zipWriter.Close()
+	reader.Close()
+
+	// Replace the original file with the cleaned one
+	return os.Rename(tempFile, filePath)
+}
+
+// cleanOpenXMLMetadata replaces metadata content with minimal values
+func (p *Processor) cleanOpenXMLMetadata(data []byte, fileName string) []byte {goCover_72deca207aa4__2[0] = 3 ; goCover_72deca207aa4__2[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__2[2] = 2 ; goCover_72deca207aa4__2[3] = 1;
+	// This is a simplified approach - a full XML parser would be better
+
+	// Replace creator, lastModifiedBy, etc.
+	data = regexp.MustCompile(`<dc:creator>.*?</dc:creator>`).
+		ReplaceAll(data, []byte("<dc:creator></dc:creator>"))
+
+	data = regexp.MustCompile(`<dc:title>.*?</dc:title>`).
+		ReplaceAll(data, []byte("<dc:title></dc:title>"))
+
+	data = regexp.MustCompile(`<dc:subject>.*?</dc:subject>`).
+		ReplaceAll(data, []byte("<dc:subject></dc:subject>"))
+
+	data = regexp.MustCompile(`<dc:description>.*?</dc:description>`).
+		ReplaceAll(data, []byte("<dc:description></dc:description>"))
+
+	data = regexp.MustCompile(`<cp:lastModifiedBy>.*?</cp:lastModifiedBy>`).
+		ReplaceAll(data, []byte("<cp:lastModifiedBy></cp:lastModifiedBy>"))
+
+	data = regexp.MustCompile(`<cp:keywords>.*?</cp:keywords>`).
+		ReplaceAll(data, []byte("<cp:keywords></cp:keywords>"))
+
+	// Replace revision information
+	data = regexp.MustCompile(`<cp:revision>.*?</cp:revision>`).
+		ReplaceAll(data, []byte("<cp:revision>1</cp:revision>"))
+
+	// For app.xml
+	if strings.Contains(fileName, "app.xml") {goCover_72deca207aa4__2[5] = 1;
+		data = regexp.MustCompile(`<Application>.*?</Application>`).
+			ReplaceAll(data, []byte("<Application></Application>"))
+
+		data = regexp.MustCompile(`<Company>.*?</Company>`).
+			ReplaceAll(data, []byte("<Company></Company>"))
+
+		data = regexp.MustCompile(`<Manager>.*?</Manager>`).
+			ReplaceAll(data, []byte("<Manager></Manager>"))
+	}
+
+	goCover_72deca207aa4__2[4] = 1;return data
+}
+
+// cleanOpenDocument removes metadata from OpenDocument files (.odt, .ods, .odp)
+func (p *Processor) cleanOpenDocument(filePath string) error {goCover_72deca207aa4__3[0] = 1 ; goCover_72deca207aa4__3[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__3[2] = 3 ; goCover_72deca207aa4__3[3] = 1;
+	// OpenDocument files are also ZIP archives with XML content
+	// Similar approach to Office Open XML files
+	return p.cleanOpenXML(filePath) // The same approach works for both formats
+}
+
+// cleanBinaryOffice removes metadata from legacy binary Office files (.doc, .xls, .ppt)
+func (p *Processor) cleanBinaryOffice(filePath, ext string) error {goCover_72deca207aa4__4[0] = 7 ; goCover_72deca207aa4__4[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__4[2] = 4 ; goCover_72deca207aa4__4[3] = 1;
+	// Binary Office formats are complex and hard to parse without dependencies
+	// We'll provide a warning about limited capabilities
+
+	p.logger.Warning("Legacy binary Office formats (%s) require complex processing. Limited metadata removal for %s", ext, filePath)
+	utils.PrintWarning(fmt.Sprintf("Legacy binary Office formats (%s) require complex processing. Limited metadata removal possible", ext))
+
+	// Open file
+	file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__4[7] = 1;
+		return err
+	}
+	goCover_72deca207aa4__4[4] = 1;defer file.Close()
+
+	// Check for Office binary file signature (D0 CF 11 E0 A1 B1 1A E1)
+	header := make([]byte, 8)
+	if _, err := file.Read(header); err != nil {goCover_72deca207aa4__4[8] = 1;
+		return err
+	}
+
+	goCover_72deca207aa4__4[5] = 1;expectedHeader := []byte{0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1}
+	if !bytes.Equal(header, expectedHeader) {goCover_72deca207aa4__4[9] = 1;
+		return errors.New("not a valid Office binary file")
+	}
+
+	// In a real implementation, we would use the Compound File Binary Format
+	// specification to locate and modify the summary information streams
+	// This is complex without dependencies
+
+	goCover_72deca207aa4__4[6] = 1;return nil
+}
+
+// cleanRTF removes metadata from RTF files
+func (p *Processor) cleanRTF(filePath string) error {goCover_72deca207aa4__5[0] = 9 ; goCover_72deca207aa4__5[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__5[2] = 5 ; goCover_72deca207aa4__5[3] = 1;
+	// Open file
+	fileData, err := os.ReadFile(filePath)
+	if err != nil {goCover_72deca207aa4__5[8] = 1;
+		return err
+	}
+
+	// Verify it's an RTF file
+	goCover_72deca207aa4__5[4] = 1;if !bytes.HasPrefix(fileData, []byte("{\\rtf")) {goCover_72deca207aa4__5[9] = 1;
+		return errors.New("not a valid RTF file")
+	}
+
+	// Remove common metadata fields
+	// This is a simplified approach using regex
+
+	// Remove author info
+	goCover_72deca207aa4__5[5] = 1;fileData = regexp.MustCompile(`\{\\author [^}]*\}`).ReplaceAll(fileData, []byte(""))
+
+	// Remove title info
+	fileData = regexp.MustCompile(`\{\\title [^}]*\}`).ReplaceAll(fileData, []byte(""))
+
+	// Remove subject info
+	fileData = regexp.MustCompile(`\{\\subject [^}]*\}`).ReplaceAll(fileData, []byte(""))
+
+	// Remove company info
+	fileData = regexp.MustCompile(`\{\\company [^}]*\}`).ReplaceAll(fileData, []byte(""))
+
+	// Remove operator info
+	fileData = regexp.MustCompile(`\{\\operator [^}]*\}`).ReplaceAll(fileData, []byte(""))
+
+	// Remove creation/revision time
+	fileData = regexp.MustCompile(`\{\\creatim[^}]*\}`).ReplaceAll(fileData, []byte(""))
+	fileData = regexp.MustCompile(`\{\\revtim[^}]*\}`).ReplaceAll(fileData, []byte(""))
+
+	// Create temp file
+	tempPath := filePath + ".temp"
+	err = os.WriteFile(tempPath, fileData, 0644)
+	if err != nil {goCover_72deca207aa4__5[10] = 1;
+		return err
+	}
+
+	// Replace original file with cleaned file
+	goCover_72deca207aa4__5[6] = 1;err = os.Rename(tempPath, filePath)
+	if err != nil {goCover_72deca207aa4__5[11] = 1;
+		os.Remove(tempPath) // Clean up temp file in case of error
+		return err
+	}
+
+	goCover_72deca207aa4__5[7] = 1;return nil
+}

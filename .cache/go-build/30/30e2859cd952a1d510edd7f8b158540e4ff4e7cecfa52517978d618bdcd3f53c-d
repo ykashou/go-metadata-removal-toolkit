@@ -1,0 +1,68 @@
+=== RUN   TestNewScanner
+=== RUN   TestNewScanner/Default_mode
+=== RUN   TestNewScanner/Preview_mode
+=== RUN   TestNewScanner/Verbose_mode
+=== RUN   TestNewScanner/Preview_and_verbose_mode
+--- PASS: TestNewScanner (0.10s)
+    --- PASS: TestNewScanner/Default_mode (0.00s)
+    --- PASS: TestNewScanner/Preview_mode (0.00s)
+    --- PASS: TestNewScanner/Verbose_mode (0.00s)
+    --- PASS: TestNewScanner/Preview_and_verbose_mode (0.00s)
+=== RUN   TestScanDirectory
+=== RUN   TestScanDirectory/Non-recursive_scan
+[37mProcessing file: /tmp/scanner_test1225024144/test.docx[0m
+[31mError processing file /tmp/scanner_test1225024144/test.docx: zip: not a valid zip file[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.jpg[0m
+[31mError processing file /tmp/scanner_test1225024144/test.jpg: not a valid JPEG file[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.log[0m
+[33mUnsupported file type: .log (skipping test.log)[0m
+[31mError processing file /tmp/scanner_test1225024144/test.log: unsupported file type[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.pdf[0m
+[32mSuccessfully removed metadata from test.pdf[0m
+=== RUN   TestScanDirectory/Recursive_scan
+[37mProcessing file: /tmp/scanner_test1225024144/subdir/nested.png[0m
+[31mError processing file /tmp/scanner_test1225024144/subdir/nested.png: not a valid PNG file[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.docx[0m
+[31mError processing file /tmp/scanner_test1225024144/test.docx: zip: not a valid zip file[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.jpg[0m
+[31mError processing file /tmp/scanner_test1225024144/test.jpg: not a valid JPEG file[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.log[0m
+[33mUnsupported file type: .log (skipping test.log)[0m
+[31mError processing file /tmp/scanner_test1225024144/test.log: unsupported file type[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.pdf[0m
+[32mSuccessfully removed metadata from test.pdf[0m
+=== RUN   TestScanDirectory/Preview_mode
+[37mProcessing file: /tmp/scanner_test1225024144/subdir/nested.png[0m
+[37mPreview mode: Would remove metadata from nested.png[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.docx[0m
+[37mPreview mode: Would remove metadata from test.docx[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.jpg[0m
+[37mPreview mode: Would remove metadata from test.jpg[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.log[0m
+[33mUnsupported file type: .log (skipping test.log)[0m
+[31mError processing file /tmp/scanner_test1225024144/test.log: unsupported file type[0m
+[37mProcessing file: /tmp/scanner_test1225024144/test.pdf[0m
+[37mPreview mode: Would remove metadata from test.pdf[0m
+--- PASS: TestScanDirectory (0.00s)
+    --- PASS: TestScanDirectory/Non-recursive_scan (0.00s)
+    --- PASS: TestScanDirectory/Recursive_scan (0.00s)
+    --- PASS: TestScanDirectory/Preview_mode (0.00s)
+=== RUN   TestProcessFile
+=== RUN   TestProcessFile/Process_JPEG_file
+[37mProcessing file: /tmp/scanner_test2931711449/test.jpg[0m
+[31mError processing file /tmp/scanner_test2931711449/test.jpg: not a valid JPEG file[0m
+=== RUN   TestProcessFile/Process_PDF_file
+[37mProcessing file: /tmp/scanner_test2931711449/test.pdf[0m
+[32mSuccessfully removed metadata from test.pdf[0m
+=== RUN   TestProcessFile/Process_non-existent_file
+[31mError accessing file /tmp/scanner_test2931711449/nonexistent.txt: stat /tmp/scanner_test2931711449/nonexistent.txt: no such file or directory[0m
+=== RUN   TestProcessFile/Preview_mode
+[37mProcessing file: /tmp/scanner_test2931711449/test.jpg[0m
+[37mPreview mode: Would remove metadata from test.jpg[0m
+--- PASS: TestProcessFile (0.00s)
+    --- PASS: TestProcessFile/Process_JPEG_file (0.00s)
+    --- PASS: TestProcessFile/Process_PDF_file (0.00s)
+    --- PASS: TestProcessFile/Process_non-existent_file (0.00s)
+    --- PASS: TestProcessFile/Preview_mode (0.00s)
+PASS
+ok  	metadata-remover/src/scanner	0.108s

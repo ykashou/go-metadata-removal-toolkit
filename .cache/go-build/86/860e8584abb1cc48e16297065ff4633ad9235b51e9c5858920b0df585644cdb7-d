@@ -1,0 +1,5 @@
+./document.go
+./image.go
+./pdf.go
+./processor.go
+./stats.go

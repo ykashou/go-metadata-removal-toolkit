@@ -1,0 +1,109 @@
+//line /workspace/src/logger/logger.go:1:1
+package logger
+
+import (
+	"fmt"
+	"os"
+	"time"
+)
+
+// LogLevel defines the severity of log messages
+type LogLevel int
+
+const (
+	INFO LogLevel = iota
+	SUCCESS
+	WARNING
+	ERROR
+)
+
+// Logger handles logging to a file
+type Logger struct {
+	file *os.File
+}
+
+// NewLogger creates a new logger that writes to a file
+func NewLogger(filePath string) (*Logger, error) {goCover_0e94e2e986b6__0[0] = 5 ; goCover_0e94e2e986b6__0[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__0[2] = 0 ; goCover_0e94e2e986b6__0[3] = 1;
+	file, err := os.Create(filePath)
+	if err != nil {goCover_0e94e2e986b6__0[6] = 1;
+		return nil, err
+	}
+
+	// Write header to log file
+	goCover_0e94e2e986b6__0[4] = 1;timestamp := time.Now().Format(time.RFC3339)
+	header := fmt.Sprintf("# Metadata Removal Utility Log\n# Started: %s\n\n", timestamp)
+	_, err = file.WriteString(header)
+	if err != nil {goCover_0e94e2e986b6__0[7] = 1;
+		file.Close()
+		return nil, err
+	}
+
+	goCover_0e94e2e986b6__0[5] = 1;return &Logger{
+		file: file,
+	}, nil
+}
+
+// Close closes the log file
+func (l *Logger) Close() error {goCover_0e94e2e986b6__1[0] = 5 ; goCover_0e94e2e986b6__1[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__1[2] = 1 ; goCover_0e94e2e986b6__1[3] = 1;
+	if l.file != nil {goCover_0e94e2e986b6__1[5] = 1;
+		// Write footer to log file
+		timestamp := time.Now().Format(time.RFC3339)
+		footer := fmt.Sprintf("\n# Finished: %s\n", timestamp)
+		_, err := l.file.WriteString(footer)
+		if err != nil {goCover_0e94e2e986b6__1[7] = 1;
+			return err
+		}
+
+		goCover_0e94e2e986b6__1[6] = 1;return l.file.Close()
+	}
+	goCover_0e94e2e986b6__1[4] = 1;return nil
+}
+
+// log writes a message to the log file with timestamp and level
+func (l *Logger) log(level LogLevel, format string, args ...interface{}) error {goCover_0e94e2e986b6__2[0] = 8 ; goCover_0e94e2e986b6__2[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__2[2] = 2 ; goCover_0e94e2e986b6__2[3] = 1;
+	if l.file == nil {goCover_0e94e2e986b6__2[6] = 1;
+		return fmt.Errorf("logger is not initialized")
+	}
+
+	// Format log message
+	goCover_0e94e2e986b6__2[4] = 1;timestamp := time.Now().Format("2006-01-02 15:04:05")
+	var levelStr string
+
+	switch level {
+	case INFO:goCover_0e94e2e986b6__2[7] = 1;
+		levelStr = "INFO"
+	case SUCCESS:goCover_0e94e2e986b6__2[8] = 1;
+		levelStr = "SUCCESS"
+	case WARNING:goCover_0e94e2e986b6__2[9] = 1;
+		levelStr = "WARNING"
+	case ERROR:goCover_0e94e2e986b6__2[10] = 1;
+		levelStr = "ERROR"
+	}
+
+	goCover_0e94e2e986b6__2[5] = 1;message := fmt.Sprintf(format, args...)
+	logLine := fmt.Sprintf("[%s] [%s] %s\n", timestamp, levelStr, message)
+
+	// Write to log file
+	_, err := l.file.WriteString(logLine)
+	return err
+}
+
+// Info logs an informational message
+func (l *Logger) Info(format string, args ...interface{}) error {goCover_0e94e2e986b6__3[0] = 1 ; goCover_0e94e2e986b6__3[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__3[2] = 3 ; goCover_0e94e2e986b6__3[3] = 1;
+	return l.log(INFO, format, args...)
+}
+
+// Success logs a success message
+func (l *Logger) Success(format string, args ...interface{}) error {goCover_0e94e2e986b6__4[0] = 1 ; goCover_0e94e2e986b6__4[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__4[2] = 4 ; goCover_0e94e2e986b6__4[3] = 1;
+	return l.log(SUCCESS, format, args...)
+}
+
+// Warning logs a warning message
+func (l *Logger) Warning(format string, args ...interface{}) error {goCover_0e94e2e986b6__5[0] = 1 ; goCover_0e94e2e986b6__5[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__5[2] = 5 ; goCover_0e94e2e986b6__5[3] = 1;
+	return l.log(WARNING, format, args...)
+}
+
+// Error logs an error message
+func (l *Logger) Error(format string, args ...interface{}) error {goCover_0e94e2e986b6__6[0] = 1 ; goCover_0e94e2e986b6__6[1] = goCover_0e94e2e986b6_P ; goCover_0e94e2e986b6__6[2] = 6 ; goCover_0e94e2e986b6__6[3] = 1;
+	return l.log(ERROR, format, args...)
+}

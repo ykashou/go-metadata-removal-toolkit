@@ -1,0 +1,46 @@
+=== RUN   TestColorFunctions
+=== RUN   TestColorFunctions/PrintSuccess
+=== RUN   TestColorFunctions/PrintError
+=== RUN   TestColorFunctions/PrintWarning
+=== RUN   TestColorFunctions/PrintInfo
+--- PASS: TestColorFunctions (0.00s)
+    --- PASS: TestColorFunctions/PrintSuccess (0.00s)
+    --- PASS: TestColorFunctions/PrintError (0.00s)
+    --- PASS: TestColorFunctions/PrintWarning (0.00s)
+    --- PASS: TestColorFunctions/PrintInfo (0.00s)
+=== RUN   TestGetFileExtension
+=== RUN   TestGetFileExtension/Regular_file_with_extension
+=== RUN   TestGetFileExtension/File_with_multiple_dots
+=== RUN   TestGetFileExtension/File_with_no_extension
+=== RUN   TestGetFileExtension/File_with_path
+=== RUN   TestGetFileExtension/Hidden_file_with_extension
+--- PASS: TestGetFileExtension (0.00s)
+    --- PASS: TestGetFileExtension/Regular_file_with_extension (0.00s)
+    --- PASS: TestGetFileExtension/File_with_multiple_dots (0.00s)
+    --- PASS: TestGetFileExtension/File_with_no_extension (0.00s)
+    --- PASS: TestGetFileExtension/File_with_path (0.00s)
+    --- PASS: TestGetFileExtension/Hidden_file_with_extension (0.00s)
+=== RUN   TestIsDirectory
+=== RUN   TestIsDirectory/Directory_path
+=== RUN   TestIsDirectory/File_path
+=== RUN   TestIsDirectory/Non-existent_path
+--- PASS: TestIsDirectory (0.00s)
+    --- PASS: TestIsDirectory/Directory_path (0.00s)
+    --- PASS: TestIsDirectory/File_path (0.00s)
+    --- PASS: TestIsDirectory/Non-existent_path (0.00s)
+=== RUN   TestCreateBackup
+--- PASS: TestCreateBackup (0.00s)
+=== RUN   TestGetFileHash
+--- PASS: TestGetFileHash (0.00s)
+=== RUN   TestGetFileSize
+--- PASS: TestGetFileSize (0.00s)
+=== RUN   TestGetFileModTime
+--- PASS: TestGetFileModTime (0.00s)
+=== RUN   TestFormatStats
+=== RUN   TestFormatStats/Text_format
+=== RUN   TestFormatStats/JSON_format
+--- PASS: TestFormatStats (0.00s)
+    --- PASS: TestFormatStats/Text_format (0.00s)
+    --- PASS: TestFormatStats/JSON_format (0.00s)
+PASS
+ok  	metadata-remover/src/utils	0.004s

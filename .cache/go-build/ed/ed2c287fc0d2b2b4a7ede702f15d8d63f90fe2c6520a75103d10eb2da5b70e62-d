@@ -1,0 +1,147 @@
+//line /workspace/src/processor/pdf.go:1:1
+package processor
+
+import (
+	"bytes"
+	"errors"
+	"os"
+	"regexp"
+)
+
+// ProcessPDF removes metadata from PDF files
+func (p *Processor) ProcessPDF(filePath string) error {goCover_72deca207aa4__13[0] = 15 ; goCover_72deca207aa4__13[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__13[2] = 13 ; goCover_72deca207aa4__13[3] = 1;
+	// If preview mode, just log and return
+	if p.previewMode {goCover_72deca207aa4__13[11] = 1;
+		return nil
+	}
+
+	// Open file
+	goCover_72deca207aa4__13[4] = 1;file, err := os.Open(filePath)
+	if err != nil {goCover_72deca207aa4__13[12] = 1;
+		return err
+	}
+	goCover_72deca207aa4__13[5] = 1;defer file.Close()
+
+	// Verify it's a PDF file
+	header := make([]byte, 5)
+	if _, err := file.Read(header); err != nil {goCover_72deca207aa4__13[13] = 1;
+		return err
+	}
+	goCover_72deca207aa4__13[6] = 1;if !bytes.Equal(header, []byte("%PDF-")) {goCover_72deca207aa4__13[14] = 1;
+		return errors.New("not a valid PDF file")
+	}
+
+	// Reopen the file to process it
+	goCover_72deca207aa4__13[7] = 1;file.Close()
+	fileContent, err := os.ReadFile(filePath)
+	if err != nil {goCover_72deca207aa4__13[15] = 1;
+		return err
+	}
+
+	// Find and remove common metadata dictionaries
+	// This is a simplified approach - a full PDF parser would be better
+	goCover_72deca207aa4__13[8] = 1;cleanedContent := p.removeInfoDictionary(fileContent)
+	cleanedContent = p.removeXMPMetadata(cleanedContent)
+	cleanedContent = p.removeDocumentInfo(cleanedContent)
+
+	// Create temp file
+	tempPath := filePath + ".temp"
+	err = os.WriteFile(tempPath, cleanedContent, 0644)
+	if err != nil {goCover_72deca207aa4__13[16] = 1;
+		return err
+	}
+
+	// Replace original file with cleaned file
+	goCover_72deca207aa4__13[9] = 1;err = os.Rename(tempPath, filePath)
+	if err != nil {goCover_72deca207aa4__13[17] = 1;
+		os.Remove(tempPath) // Clean up temp file in case of error
+		return err
+	}
+
+	goCover_72deca207aa4__13[10] = 1;return nil
+}
+
+// removeInfoDictionary removes the Info dictionary from PDF content
+func (p *Processor) removeInfoDictionary(content []byte) []byte {goCover_72deca207aa4__14[0] = 5 ; goCover_72deca207aa4__14[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__14[2] = 14 ; goCover_72deca207aa4__14[3] = 1;
+	// Pattern to match the Info dictionary
+	infoPattern := regexp.MustCompile(`/Info\s+\d+\s+\d+\s+R`)
+
+	// Find all instances
+	matches := infoPattern.FindAllIndex(content, -1)
+
+	if len(matches) == 0 {goCover_72deca207aa4__14[6] = 1;
+		return content
+	}
+
+	// Generate replacement (keep structure but remove content)
+	goCover_72deca207aa4__14[4] = 1;replacement := []byte("/Info 0 0 R")
+
+	// Create new content with replaced Info references
+	newContent := make([]byte, 0, len(content))
+	lastPos := 0
+
+	for _, match := range matches {goCover_72deca207aa4__14[7] = 1;
+		newContent = append(newContent, content[lastPos:match[0]]...)
+		newContent = append(newContent, replacement...)
+		lastPos = match[1]
+	}
+
+	goCover_72deca207aa4__14[5] = 1;newContent = append(newContent, content[lastPos:]...)
+
+	return newContent
+}
+
+// removeXMPMetadata removes XMP metadata from PDF content
+func (p *Processor) removeXMPMetadata(content []byte) []byte {goCover_72deca207aa4__15[0] = 5 ; goCover_72deca207aa4__15[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__15[2] = 15 ; goCover_72deca207aa4__15[3] = 1;
+	// Pattern to match XMP metadata streams
+	// This is a simplified approach - a full XML parser would be better
+	startPattern := []byte("<x:xmpmeta")
+	endPattern := []byte("</x:xmpmeta>")
+
+	// Find start position
+	startPos := bytes.Index(content, startPattern)
+	if startPos == -1 {goCover_72deca207aa4__15[6] = 1;
+		return content
+	}
+
+	// Find end position
+	goCover_72deca207aa4__15[4] = 1;endPos := bytes.Index(content[startPos:], endPattern)
+	if endPos == -1 {goCover_72deca207aa4__15[7] = 1;
+		return content
+	}
+	goCover_72deca207aa4__15[5] = 1;endPos += startPos + len(endPattern)
+
+	// Create new content without XMP metadata
+	newContent := make([]byte, 0, len(content)-(endPos-startPos))
+	newContent = append(newContent, content[:startPos]...)
+	newContent = append(newContent, content[endPos:]...)
+
+	return newContent
+}
+
+// removeDocumentInfo removes document information from PDF content
+func (p *Processor) removeDocumentInfo(content []byte) []byte {goCover_72deca207aa4__16[0] = 5 ; goCover_72deca207aa4__16[1] = goCover_72deca207aa4_P ; goCover_72deca207aa4__16[2] = 16 ; goCover_72deca207aa4__16[3] = 1;
+	// Pattern to match document information dictionaries
+	pattern := regexp.MustCompile(`<<\s*(/Title|\s*/Author|\s*/Subject|\s*/Keywords|\s*/Creator|\s*/Producer|\s*/CreationDate|\s*/ModDate|\s*/Trapped)[^>]*>>`)
+
+	// Find all matches
+	matches := pattern.FindAllSubmatchIndex(content, -1)
+
+	if len(matches) == 0 {goCover_72deca207aa4__16[6] = 1;
+		return content
+	}
+
+	// Create new content with empty document information
+	goCover_72deca207aa4__16[4] = 1;newContent := make([]byte, 0, len(content))
+	lastPos := 0
+
+	for _, match := range matches {goCover_72deca207aa4__16[7] = 1;
+		newContent = append(newContent, content[lastPos:match[0]]...)
+		newContent = append(newContent, []byte("<< >>")...)
+		lastPos = match[1]
+	}
+
+	goCover_72deca207aa4__16[5] = 1;newContent = append(newContent, content[lastPos:]...)
+
+	return newContent
+}

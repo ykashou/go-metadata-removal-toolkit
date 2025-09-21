@@ -42,15 +42,15 @@ func TestNewProcessor(t *testing.T) {
 
 	// Test processor creation with different options
 	testCases := []struct {
-		name       string
+		name        string
 		previewMode bool
 	}{
 		{
-			name:       "Normal mode",
+			name:        "Normal mode",
 			previewMode: false,
 		},
 		{
-			name:       "Preview mode",
+			name:        "Preview mode",
 			previewMode: true,
 		},
 	}
@@ -186,7 +186,7 @@ func TestProcessFile(t *testing.T) {
 	for _, tf := range testFiles {
 		t.Run("Process "+tf.fileType, func(t *testing.T) {
 			err := proc.ProcessFile(tf.path, tf.ext)
-			
+
 			if tf.fileType == stats.TypeUnknown {
 				// Should error for unknown file types
 				if err == nil {
@@ -213,13 +213,13 @@ func TestProcessFile(t *testing.T) {
 			if err != nil {
 				t.Errorf("Expected no error in preview mode, got %v", err)
 			}
-			
+
 			// Verify file content was not changed in preview mode
 			content, err := os.ReadFile(tf.path)
 			if err != nil {
 				t.Fatalf("Failed to read file: %v", err)
 			}
-			
+
 			if string(content) != string(tf.content) {
 				t.Error("File was modified in preview mode")
 			}
