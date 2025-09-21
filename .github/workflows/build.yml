@@ -1,0 +1,85 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.25.1']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ matrix.go-version }}-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Verify dependencies
+      run: go mod verify
+    
+    - name: Build binary
+      run: go build -v -o metadata-remover ./src
+    
+    - name: Build for multiple platforms
+      run: |
+        GOOS=linux GOARCH=amd64 go build -o metadata-remover-linux-amd64 ./src
+        GOOS=linux GOARCH=arm64 go build -o metadata-remover-linux-arm64 ./src
+        GOOS=darwin GOARCH=amd64 go build -o metadata-remover-darwin-amd64 ./src
+        GOOS=darwin GOARCH=arm64 go build -o metadata-remover-darwin-arm64 ./src
+        GOOS=windows GOARCH=amd64 go build -o metadata-remover-windows-amd64.exe ./src
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries
+        path: metadata-remover*
+        retention-days: 7
+
+  container-build:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Podman
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install podman
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    
+    - name: Build development container with Podman
+      run: |
+        podman build -f ops/build/development.Containerfile -t metadata-remover:dev .
+    
+    - name: Build production container with Podman
+      run: |
+        podman build -f ops/build/master.Containerfile -t metadata-remover:latest .
+    
+    - name: Test container build
+      run: |
+        podman run --rm metadata-remover:latest --help || true
