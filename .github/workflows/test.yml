@@ -1,6 +1,12 @@
 name: Test
 
 on:
+  # Temporarily also run on push/PR for testing on debug branch
+  # Remove these after merging to master
+  push:
+    branches: [ master, debug/go-gh-workflow-debugging ]
+  pull_request:
+    branches: [ master ]
   workflow_run:
     workflows: ["Build"]
     types:
@@ -9,7 +15,7 @@ on:
 
 jobs:
   unit-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     
     steps:
@@ -61,7 +67,7 @@ jobs:
         retention-days: 7
 
   integration-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     needs: unit-tests
     
@@ -105,7 +111,7 @@ jobs:
         go test -tags=integration ./src/... || true
 
   container-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     needs: unit-tests
     
@@ -157,7 +163,7 @@ jobs:
         podman run --rm metadata-remover:dev go version
 
   benchmark-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     
     steps:
@@ -196,7 +202,7 @@ jobs:
         retention-days: 30
 
   lint:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     
     steps:
