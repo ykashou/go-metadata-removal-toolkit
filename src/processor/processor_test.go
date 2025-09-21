@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"metadata-remover/src/logger"
+	"metadata-remover/src/stats"
 )
 
 func setupProcessorTest(t *testing.T) (string, *logger.Logger, *Processor, func()) {
@@ -82,47 +83,47 @@ func TestGetFileType(t *testing.T) {
 		{
 			name:     "JPEG Image",
 			ext:      ".jpg",
-			expected: TypeImage,
+			expected: stats.TypeImage,
 		},
 		{
 			name:     "PNG Image",
 			ext:      ".png",
-			expected: TypeImage,
+			expected: stats.TypeImage,
 		},
 		{
 			name:     "PDF Document",
 			ext:      ".pdf",
-			expected: TypePDF,
+			expected: stats.TypePDF,
 		},
 		{
 			name:     "Word Document",
 			ext:      ".docx",
-			expected: TypeDocument,
+			expected: stats.TypeDocument,
 		},
 		{
 			name:     "Excel Document",
 			ext:      ".xlsx",
-			expected: TypeDocument,
+			expected: stats.TypeDocument,
 		},
 		{
 			name:     "Text Document",
 			ext:      ".txt",
-			expected: TypeDocument,
+			expected: stats.TypeDocument,
 		},
 		{
 			name:     "Unsupported File Type",
 			ext:      ".xyz",
-			expected: TypeUnknown,
+			expected: stats.TypeUnknown,
 		},
 		{
 			name:     "Case Insensitivity",
 			ext:      ".JPG",
-			expected: TypeImage,
+			expected: stats.TypeImage,
 		},
 		{
 			name:     "Empty Extension",
 			ext:      "",
-			expected: TypeUnknown,
+			expected: stats.TypeUnknown,
 		},
 	}
 
@@ -151,25 +152,25 @@ func TestProcessFile(t *testing.T) {
 			path:     filepath.Join(tempDir, "test.jpg"),
 			content:  []byte("JPEG image data"),
 			ext:      ".jpg",
-			fileType: TypeImage,
+			fileType: stats.TypeImage,
 		},
 		{
 			path:     filepath.Join(tempDir, "test.pdf"),
 			content:  []byte("%PDF-1.5\nTest content"),
 			ext:      ".pdf",
-			fileType: TypePDF,
+			fileType: stats.TypePDF,
 		},
 		{
 			path:     filepath.Join(tempDir, "test.docx"),
 			content:  []byte("DOCX document content"),
 			ext:      ".docx",
-			fileType: TypeDocument,
+			fileType: stats.TypeDocument,
 		},
 		{
 			path:     filepath.Join(tempDir, "test.xyz"),
 			content:  []byte("Unknown file type"),
 			ext:      ".xyz",
-			fileType: TypeUnknown,
+			fileType: stats.TypeUnknown,
 		},
 	}
 
@@ -186,7 +187,7 @@ func TestProcessFile(t *testing.T) {
 		t.Run("Process "+tf.fileType, func(t *testing.T) {
 			err := proc.ProcessFile(tf.path, tf.ext)
 			
-			if tf.fileType == TypeUnknown {
+			if tf.fileType == stats.TypeUnknown {
 				// Should error for unknown file types
 				if err == nil {
 					t.Error("Expected error for unknown file type")
@@ -203,7 +204,7 @@ func TestProcessFile(t *testing.T) {
 	// Test preview mode
 	previewProc := NewProcessor(proc.logger, true)
 	for _, tf := range testFiles {
-		if tf.fileType == TypeUnknown {
+		if tf.fileType == stats.TypeUnknown {
 			continue // Skip unknown file types
 		}
 
