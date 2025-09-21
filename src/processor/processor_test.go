@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"metadata-remover/logger"
+	"metadata-remover/src/logger"
 )
 
 func setupProcessorTest(t *testing.T) (string, *logger.Logger, *Processor, func()) {

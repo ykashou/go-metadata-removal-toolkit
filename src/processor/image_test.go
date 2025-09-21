@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"metadata-remover/logger"
+	"metadata-remover/src/logger"
 )
 
 func setupImageTest(t *testing.T) (string, *Processor, func()) {

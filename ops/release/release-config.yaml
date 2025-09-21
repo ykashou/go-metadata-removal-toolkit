@@ -1,0 +1,52 @@
+# Release configuration for go-metadata-removal-toolkit
+project:
+  name: go-metadata-removal-toolkit
+  binary: metadata-remover
+  description: Fast and efficient metadata removal tool
+
+versioning:
+  scheme: semver
+  current: 1.0.0
+
+platforms:
+  - os: linux
+    arch: [amd64, arm64, arm]
+  - os: darwin
+    arch: [amd64, arm64]
+  - os: windows
+    arch: [amd64]
+
+container:
+  registry: ghcr.io
+  repository: ykashou/go-metadata-removal-toolkit
+  tags:
+    - latest
+    - "{{ .Version }}"
+    - "{{ .Major }}"
+    - "{{ .Major }}.{{ .Minor }}"
+
+release:
+  draft: false
+  prerelease: false
+  name_template: "{{ .ProjectName }} {{ .Tag }}"
+  
+artifacts:
+  - binaries
+  - containers
+  - checksums
+  - changelog
+
+build:
+  ldflags:
+    - -s -w
+    - -X main.appVersion={{ .Version }}
+    - -X main.buildDate={{ .Date }}
+    - -X main.gitCommit={{ .Commit }}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'

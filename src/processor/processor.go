@@ -6,9 +6,9 @@ import (
         "path/filepath"
         "strings"
 
-        "metadata-remover/logger"
-        "metadata-remover/stats"
-        "metadata-remover/utils"
+        "metadata-remover/src/logger"
+        "metadata-remover/src/stats"
+        "metadata-remover/src/utils"
 )
 
 // Processor handles metadata removal from various file types

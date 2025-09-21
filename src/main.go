@@ -7,9 +7,9 @@ import (
         "path/filepath"
         "time"
 
-        "metadata-remover/logger"
-        "metadata-remover/scanner"
-        "metadata-remover/utils"
+        "metadata-remover/src/logger"
+        "metadata-remover/src/scanner"
+        "metadata-remover/src/utils"
 )
 
 var (

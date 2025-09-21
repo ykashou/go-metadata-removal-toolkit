@@ -9,7 +9,7 @@ import (
         "os"
         "strings"
 
-        "metadata-remover/utils"
+        "metadata-remover/src/utils"
 )
 
 // ProcessImage removes metadata from image files

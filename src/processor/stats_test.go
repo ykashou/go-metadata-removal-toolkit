@@ -1,7 +1,7 @@
 package processor
 
 import (
-        "metadata-remover/stats"
+        "metadata-remover/src/stats"
         "testing"
 )
 
