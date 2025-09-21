@@ -1,7 +1,0 @@
-covervars.go
-colors.cover.go
-fileutils.cover.go
-stats.cover.go
-./colors_test.go
-./fileutils_test.go
-./stats_test.go
