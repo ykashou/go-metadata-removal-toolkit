@@ -1,5 +1,5 @@
 # Production Containerfile for go-metadata-removal-toolkit
-FROM golang:1.19-alpine AS builder
+FROM golang:1.25.1-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache \

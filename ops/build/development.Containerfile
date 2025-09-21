@@ -1,5 +1,5 @@
 # Development Containerfile for go-metadata-removal-toolkit
-FROM golang:1.19-bullseye
+FROM golang:1.25.1-bookworm
 
 # Install development tools
 RUN apt-get update && apt-get install -y \
