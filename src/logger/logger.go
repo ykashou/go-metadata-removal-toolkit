@@ -52,7 +52,7 @@ func (l *Logger) Close() error {
 		if err != nil {
 			return err
 		}
-		
+
 		return l.file.Close()
 	}
 	return nil
@@ -67,7 +67,7 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) error {
 	// Format log message
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	var levelStr string
-	
+
 	switch level {
 	case INFO:
 		levelStr = "INFO"
@@ -78,10 +78,10 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) error {
 	case ERROR:
 		levelStr = "ERROR"
 	}
-	
+
 	message := fmt.Sprintf(format, args...)
 	logLine := fmt.Sprintf("[%s] [%s] %s\n", timestamp, levelStr, message)
-	
+
 	// Write to log file
 	_, err := l.file.WriteString(logLine)
 	return err
